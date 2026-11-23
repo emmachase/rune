@@ -6,7 +6,7 @@ use rune::Icon;
 
 use crate::kit::Glyphs;
 
-/// A pipette, for picking a colour from what's shown (`ColorPicker::eyedropper`).
+/// A pipette, for picking a color from what's shown (`ColorPicker::eyedropper`).
 pub static EYEDROPPER: Icon = Icon {
     name: "kit-eyedropper",
     view: 16.0,

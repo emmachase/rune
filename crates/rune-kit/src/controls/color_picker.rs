@@ -1,9 +1,9 @@
-//! ColorPicker: a colour picked by its hue, saturation and value, as the pickers in design tools
+//! ColorPicker: a color picked by its hue, saturation and value, as the pickers in design tools
 //! and the web's `<input type="color">` dialogs pick them. A square of every saturation and value
-//! of one hue, a strip of the hues, the colour beside its hex code (typed in, when the app gives
+//! of one hue, a strip of the hues, the color beside its hex code (typed in, when the app gives
 //! it a field), and optional swatches to pick from.
 //!
-//! It works in [`Hsv`] rather than [`Color`] so that a grey, which has no hue of its own, keeps
+//! It works in [`Hsv`] rather than [`Color`] so that a gray, which has no hue of its own, keeps
 //! the hue the square shows while it's dragged through: the app keeps the `Hsv` the picker hands
 //! back and builds the picker from it again.
 
@@ -13,8 +13,8 @@ use rune::{Color, Drag, El, Key, KeyEvent, TextEdit, Tx, col, el, row, text};
 
 use crate::{Kit, TextInput};
 
-/// A colour as hue (0 to 1 around the wheel, red at 0), saturation and value (0 to 1), of its
-/// sRGB encoding, as colour pickers and CSS's `hsv()` describe it.
+/// A color as hue (0 to 1 around the wheel, red at 0), saturation and value (0 to 1), of its
+/// sRGB encoding, as color pickers and CSS's `hsv()` describe it.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Hsv {
     pub h: f32,
@@ -27,7 +27,7 @@ impl Hsv {
         Hsv { h: h.rem_euclid(1.0), s: s.clamp(0.0, 1.0), v: v.clamp(0.0, 1.0) }
     }
 
-    /// The hue, saturation and value of `color` (its alpha aside). A grey's hue is 0.
+    /// The hue, saturation and value of `color` (its alpha aside). A gray's hue is 0.
     pub fn of(color: Color) -> Hsv {
         Hsv::of_srgb([color.r, color.g, color.b].map(encode))
     }
@@ -49,7 +49,7 @@ impl Hsv {
         Hsv::new(h, if max <= 0.0 { 0.0 } else { d / max }, max)
     }
 
-    /// The opaque colour.
+    /// The opaque color.
     pub fn color(self) -> Color {
         let [r, g, b] = self.srgb();
         Color { r: decode(r), g: decode(g), b: decode(b), a: 1.0 }
@@ -126,7 +126,7 @@ impl<S: 'static> ColorPicker<S> {
     pub fn new(hsv: Hsv) -> ColorPicker<S> {
         ColorPicker { hsv, label: None, width: 240.0, height: 150.0, swatches: Vec::new(), change: None, hex: None, eyedropper: None }
     }
-    /// The accessible name of the colour picked ("Background colour").
+    /// The accessible name of the color picked ("Background color").
     pub fn label(mut self, l: impl Into<String>) -> Self {
         self.label = Some(l.into());
         self
@@ -137,27 +137,27 @@ impl<S: 'static> ColorPicker<S> {
         self.height = height;
         self
     }
-    /// Colours to pick with one press, in a row under the rest: ones that go with what the
-    /// colour is for, or the ones picked lately.
+    /// Colors to pick with one press, in a row under the rest: ones that go with what the
+    /// color is for, or the ones picked lately.
     pub fn swatches(mut self, colors: impl IntoIterator<Item = Color>) -> Self {
         self.swatches = colors.into_iter().collect();
         self
     }
-    /// Called with the new colour as the square or the strip is dragged or stepped, a swatch
+    /// Called with the new color as the square or the strip is dragged or stepped, a swatch
     /// pressed, or a whole hex code typed. Keep the `Hsv` and build the picker from it.
     pub fn on_change(mut self, f: impl Fn(&mut S, Hsv, &mut Tx) + 'static) -> Self {
         self.change = Some(Rc::new(f));
         self
     }
     /// A field to type the hex code in, editing the app's `TextEdit` (`field` finds it in the
-    /// state). A whole code typed changes the colour; the picker keeps the field's text in step
-    /// when the colour changes any other way.
+    /// state). A whole code typed changes the color; the picker keeps the field's text in step
+    /// when the color changes any other way.
     pub fn hex_field(mut self, edit: &TextEdit, field: impl for<'a> Fn(&'a mut S) -> &'a mut TextEdit + 'static) -> Self {
         self.hex = Some((edit.clone(), Rc::new(field)));
         self
     }
 
-    /// A button beside the hex code to pick a colour from what the app shows: an image, a
+    /// A button beside the hex code to pick a color from what the app shows: an image, a
     /// photo, a canvas. The app decides where picking happens; `active` is whether it's picking
     /// now, which the button shows pressed, and `toggle` is called when it's pressed. The app
     /// hands what it picks to the picker's `on_change` handler as any other change.
@@ -268,7 +268,7 @@ impl<S: 'static> ColorPicker<S> {
             strip = strip.on_drag(hue).on_step(step);
         }
 
-        // The colour, and its code to read or type
+        // The color, and its code to read or type
         let swatch = el()
             .key("swatch")
             .size(28.0, 28.0)
@@ -281,7 +281,7 @@ impl<S: 'static> ColorPicker<S> {
                 let (field, f) = (field.clone(), f.clone());
                 let read = field.clone();
                 TextInput::new(edit)
-                    .label("Hex colour")
+                    .label("Hex color")
                     .placeholder("#rrggbb")
                     .width(None)
                     .on_edit(move |s: &mut S| field(s))
@@ -307,7 +307,7 @@ impl<S: 'static> ColorPicker<S> {
                 .fill(if active { c.bg_accent } else { c.layer_01 })
                 .box_shadow(rune::Shadow { spread: 0.5, color: c.border_strong, ..Default::default() })
                 .role("switch")
-                .label("Pick a colour")
+                .label("Pick a color")
                 .checked(active)
                 .focusable(true)
                 .cursor(rune::Cursor::Pointer)
@@ -353,7 +353,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn colours_go_round_hsv_and_hex() {
+    fn colors_go_round_hsv_and_hex() {
         for code in ["#ff0000", "#00ff80", "#123456", "#ffffff", "#000000", "#7f7f7f"] {
             assert_eq!(Hsv::from_hex(code).unwrap().hex(), code);
         }
@@ -366,10 +366,10 @@ mod tests {
     }
 
     #[test]
-    fn a_grey_keeps_whatever_hue_it_is_given() {
-        // Dragged to the square's left edge the colour is grey, but the hue stays with the Hsv
-        let grey = Hsv::new(0.6, 0.0, 0.5);
-        assert_eq!(grey.h, 0.6);
-        assert_eq!(grey.hex(), "#808080");
+    fn a_gray_keeps_whatever_hue_it_is_given() {
+        // Dragged to the square's left edge the color is gray, but the hue stays with the Hsv
+        let gray = Hsv::new(0.6, 0.0, 0.5);
+        assert_eq!(gray.h, 0.6);
+        assert_eq!(gray.hex(), "#808080");
     }
 }
