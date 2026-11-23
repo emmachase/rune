@@ -1,11 +1,17 @@
 //! The small built-in glyphs components draw (check marks, chevrons, close, stars). Geometric
 //! shapes, not an icon catalog; a theme may replace any of them through `Kit::glyph`.
-//! `MIC`, `KEYBOARD`, `CURSOR_TEXT`, `ARROW_RIGHT`, `SPARKLE`, `STAR` and `STAR_FILLED` have no `Glyphs` slot: draw them with `icon(&glyphs::MIC, 16.0)`.
+//! `MIC`, `KEYBOARD`, `CURSOR_TEXT`, `ARROW_RIGHT`, `SPARKLE`, `STAR`, `STAR_FILLED` and `EYEDROPPER` have no `Glyphs` slot: draw them with `icon(&glyphs::MIC, 16.0)`.
 
 use rune::Icon;
 
 use crate::kit::Glyphs;
 
+/// A pipette, for picking a colour from what's shown (`ColorPicker::eyedropper`).
+pub static EYEDROPPER: Icon = Icon {
+    name: "kit-eyedropper",
+    view: 16.0,
+    body: r#"<g fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M10.2 3.3l1.1-1.1a1.6 1.6 0 0 1 2.3 2.3l-1.1 1.1"/><path d="M8.6 4.9l2.5 2.5"/><path d="M9.8 6.2L4.2 11.8 2.5 12.3 3 10.6 8.6 5"/><path d="M2.5 13.5h0"/></g>"#,
+};
 pub static CHECK: Icon = Icon {
     name: "kit-check",
     view: 12.0,

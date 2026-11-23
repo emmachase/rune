@@ -108,6 +108,7 @@ const STRIP: f32 = 12.0;
 const SWATCH: f32 = 22.0;
 
 type Change<S> = Rc<dyn Fn(&mut S, Hsv, &mut Tx)>;
+type Toggle<S> = Rc<dyn Fn(&mut S, &mut Tx)>;
 type Field<S> = Rc<dyn for<'a> Fn(&'a mut S) -> &'a mut TextEdit>;
 
 pub struct ColorPicker<S: 'static> {
@@ -118,11 +119,12 @@ pub struct ColorPicker<S: 'static> {
     swatches: Vec<Color>,
     change: Option<Change<S>>,
     hex: Option<(TextEdit, Field<S>)>,
+    eyedropper: Option<(bool, Toggle<S>)>,
 }
 
 impl<S: 'static> ColorPicker<S> {
     pub fn new(hsv: Hsv) -> ColorPicker<S> {
-        ColorPicker { hsv, label: None, width: 240.0, height: 150.0, swatches: Vec::new(), change: None, hex: None }
+        ColorPicker { hsv, label: None, width: 240.0, height: 150.0, swatches: Vec::new(), change: None, hex: None, eyedropper: None }
     }
     /// The accessible name of the colour picked ("Background colour").
     pub fn label(mut self, l: impl Into<String>) -> Self {
@@ -152,6 +154,15 @@ impl<S: 'static> ColorPicker<S> {
     /// when the colour changes any other way.
     pub fn hex_field(mut self, edit: &TextEdit, field: impl for<'a> Fn(&'a mut S) -> &'a mut TextEdit + 'static) -> Self {
         self.hex = Some((edit.clone(), Rc::new(field)));
+        self
+    }
+
+    /// A button beside the hex code to pick a colour from what the app shows: an image, a
+    /// photo, a canvas. The app decides where picking happens; `active` is whether it's picking
+    /// now, which the button shows pressed, and `toggle` is called when it's pressed. The app
+    /// hands what it picks to the picker's `on_change` handler as any other change.
+    pub fn eyedropper(mut self, active: bool, toggle: impl Fn(&mut S, &mut Tx) + 'static) -> Self {
+        self.eyedropper = Some((active, Rc::new(toggle)));
         self
     }
 
@@ -287,8 +298,24 @@ impl<S: 'static> ColorPicker<S> {
             _ => text(self.hsv.hex()).key("hex").font(k.ty.ui).color(c.text_muted).grow(1.0),
         };
 
+        let dropper = self.eyedropper.map(|(active, toggle)| {
+            let button = el()
+                .key("eyedropper")
+                .size(28.0, 28.0)
+                .radius(6.0)
+                .center()
+                .fill(if active { c.bg_accent } else { c.layer_01 })
+                .box_shadow(rune::Shadow { spread: 0.5, color: c.border_strong, ..Default::default() })
+                .role("switch")
+                .label("Pick a colour")
+                .checked(active)
+                .focusable(true)
+                .cursor(rune::Cursor::Pointer)
+                .child(rune::icon(&crate::glyphs::EYEDROPPER, 16.0).color(if active { c.white } else { c.icon_base }));
+            k.interactive(button).on_press_tx(move |s: &mut S, tx: &mut Tx| toggle(s, tx))
+        });
         let mut root = col().role("group").w(w).gap(12.0).child(area).child(strip).child(
-            row().w_full().gap(10.0).center_y().child(swatch).child(code),
+            row().w_full().gap(10.0).center_y().child(swatch).child(code).children(dropper),
         );
         if let Some(l) = self.label {
             root = root.label(l);
